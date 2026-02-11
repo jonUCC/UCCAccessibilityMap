@@ -45,6 +45,9 @@
     );
     tiles.addTo(map);
 
+    // Store building floor data globally
+    window.buildingFloorData = {};
+
     async function loadBuildings() {
         const res = await fetch('/assets/buildings.geojson');
         const geojson = await res.json();
@@ -57,29 +60,51 @@
             },
             onEachFeature: (feature, layer) => {
                 const p = feature.properties;
+                const floors = p.floors || [];
 
-                const floorsHtml = (p.floors || [])
-                    .map(
-                        (img, i) =>
-                            `<div>
-                               <strong>Floor ${i + 1}</strong><br/>
-                               <img src="${img}" style="width:200px; margin-top:4px;" />
-                             </div>`
-                    )
-                    .join('<hr/>');
+                window.buildingFloorData[p.id] = floors;
+
+                if (!floors.length) return;
+
+                const floorButtons = floors.map((_, i) => {
+                    const label = i === 0 ? 'Ground' : i;
+                    return `<button onclick="changeFloor('${p.id}', ${i})">${label}</button>`;
+                }).join(' ');
 
                 const popupHtml = `
-                    <h3>${p.name}</h3>
-                    <p><strong>Opening hours:</strong><br/>${p.opening_hours}</p>
-                    ${floorsHtml}
+                    <div style="max-width:400px">
+                        <h3>${p.name}</h3>
+                        <p><strong>Opening hours:</strong><br/>${p.opening_hours}</p>
+
+                        <div style="margin-bottom:6px">
+                            ${floorButtons}
+                        </div>
+
+                        <img
+                            id="floor-img-${p.id}"
+                            src="${floors[0]}"
+                            style="width:100%; border:1px solid #ccc;"
+                        />
+                    </div>
                 `;
 
-                layer.bindPopup(popupHtml);
-            }
+  layer.bindPopup(popupHtml);
+}
         }).addTo(map);
     }
 
     loadBuildings();
+
+    window.changeFloor = function (buildingId, floorIndex) {
+        const img = document.getElementById(`floor-img-${buildingId}`);
+        if (!img) return;
+
+        const floors = window.buildingFloorData[buildingId];
+        if (!floors) return;
+
+        img.src = floors[floorIndex];
+    };
+
 
     // 3) Click to add a marker
     let marker;

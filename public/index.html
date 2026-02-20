@@ -1,15 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>OSM + Leaflet Quickstart</title>
+    <title>UCC Accessibility Map</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
+
     <style>
       html,
       body {
@@ -17,6 +19,7 @@
         margin: 0;
         font-family: system-ui, sans-serif;
       }
+
       #map {
         height: 100%;
       }
@@ -30,7 +33,7 @@
         padding: 16px;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        max-width: 300px;
+        max-width: 320px;
       }
 
       .control-panel h3 {
@@ -71,7 +74,7 @@
 
       button {
         padding: 8px 16px;
-        margin: 4px 4px 4px 0;
+        margin: 4px 8px 4px 0;
         border: none;
         border-radius: 4px;
         cursor: pointer;
@@ -167,12 +170,15 @@
       }
     </style>
   </head>
+
   <body>
     <div class="control-panel">
       <h3>Accessibility Router</h3>
       <div class="instructions">
-        Click on the map to set your <strong>start</strong> point, then click
-        again to set your <strong>end</strong> point.
+        Click the map to set your <strong>start</strong> point, then click again
+        to set your <strong>end</strong> point. Use
+        <strong>Report Barrier</strong>
+        to drop a barrier marker.
       </div>
 
       <div id="startPoint" class="point-display active">
@@ -186,8 +192,16 @@
       </div>
 
       <div>
-        <button id="routeBtn" class="btn-primary" disabled>Get Route</button>
-        <button id="clearBtn" class="btn-secondary">Clear</button>
+        <button id="reportBtn" class="btn-secondary" type="button">
+          Report Barrier
+        </button>
+      </div>
+
+      <div>
+        <button id="routeBtn" class="btn-primary" disabled type="button">
+          Get Route
+        </button>
+        <button id="clearBtn" class="btn-secondary" type="button">Clear</button>
       </div>
 
       <div id="statusMessage" class="status-message"></div>
@@ -203,10 +217,13 @@
         </div>
         <div class="route-stat">
           <span class="route-stat-label">Accessibility:</span>
-          <span class="route-stat-value" id="routeAccessibility">-</span>
+          <span class="route-stat-value" id="routeAccessibility"
+            >Unknown (no data yet)</span
+          >
         </div>
       </div>
     </div>
+
     <div id="map"></div>
 
     <script
@@ -214,262 +231,277 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
+
     <script>
       // 1) Init map (centered on UCC)
-      const UCC_CENTER = [51.893, -8.492];
-      const map = L.map("map").setView(UCC_CENTER, 17);
+      const UCC_CENTER = [51.893, -8.492]
+      const map = L.map('map').setView(UCC_CENTER, 17)
 
-      // 2) Basemap tiles: Use a provider meant for apps (replace with your provider URL + key)
-      // Example: https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png (community), light usage only.
-      // Prefer a commercial/hosted tile service for production.
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      // 2) Basemap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map)
 
-// State variables for routing
+      // State variables for routing
       let startPoint = null;
       let endPoint = null;
       let startMarker = null;
       let endMarker = null;
       let routeLayer = null;
 
-      // Load building data
-      async function loadBuildings() {
-        const res = await fetch('/assets/buildings.geojson');
-        const geojson = await res.json();
+      // Barrier reporting state
+      let reportingMode = false
+      const barriers = []
+      const barrierLayer = L.layerGroup().addTo(map)
 
-        L.geoJSON(geojson, {
-          style: {
-            color: '#0057b8',
-            weight: 2,
-            fillOpacity: 0.4
-          },
-          onEachFeature: (feature, layer) => {
-            const p = feature.properties;
+      // Load building data (optional, keeps your existing behaviour)
+async function loadBuildings() {
+  try {
+    const res = await fetch('/assets/buildings.geojson')
+    if (!res.ok) return
+    const geojson = await res.json()
 
-            const floorsHtml = (p.floors || [])
-              .map(
-                (img, i) =>
-                  `<div>
-                     <strong>Floor ${i + 1}</strong><br/>
-                     <img src="${img}" style="width:200px; margin-top:4px;" />
-                   </div>`
-              )
-              .join('<hr/>');
+    L.geoJSON(geojson, {
+      style: {
+        color: '#0057b8',
+        weight: 2,
+        fillOpacity: 0.4
+      },
+      onEachFeature: (feature, layer) => {
+        const p = feature.properties || {}
 
-            const popupHtml = `
-              <h3>${p.name}</h3>
-              <p><strong>Opening hours:</strong><br/>${p.opening_hours}</p>
-              ${floorsHtml}
-            `;
+        const floorsHtml = (p.floors || [])
+          .map(
+            (img, i) =>
+              `<div>
+                <strong>Floor ${i + 1}</strong><br/>
+                <img src="${img}" style="width:200px; margin-top:4px;" />
+              </div>`
+          )
+          .join('<hr/>')
 
-            layer.bindPopup(popupHtml);
-          }
-        }).addTo(map);
+        const popupHtml = `
+          <h3>${p.name || 'Building'}</h3>
+          ${p.opening_hours ? `<p><strong>Opening hours:</strong><br/>${p.opening_hours}</p>` : ''}
+          ${floorsHtml}
+        `
+
+        layer.bindPopup(popupHtml)
       }
+    }).addTo(map)
+  } catch (e) {
+    // ignore if file not available yet
+  }
+}
 
-      loadBuildings();
+      loadBuildings()
 
       const startIcon = L.divIcon({
-        className: "start-marker",
+        className: 'start-marker',
         iconSize: [16, 16],
-        iconAnchor: [8, 8],
-      });
+        iconAnchor: [8, 8]
+      })
 
       const endIcon = L.divIcon({
-        className: "end-marker",
+        className: 'end-marker',
         iconSize: [16, 16],
-        iconAnchor: [8, 8],
-      });
+        iconAnchor: [8, 8]
+      })
+
       function updateUI() {
-        const startCoords = document.getElementById("startCoords");
-        const endCoords = document.getElementById("endCoords");
-        const startDiv = document.getElementById("startPoint");
-        const endDiv = document.getElementById("endPoint");
-        const routeBtn = document.getElementById("routeBtn");
+        const startCoords = document.getElementById('startCoords')
+        const endCoords = document.getElementById('endCoords')
+        const startDiv = document.getElementById('startPoint')
+        const endDiv = document.getElementById('endPoint')
+        const routeBtn = document.getElementById('routeBtn')
 
         if (startPoint) {
-          startCoords.textContent = `${startPoint.lat.toFixed(
-            5
-          )}, ${startPoint.lng.toFixed(5)}`;
+          startCoords.textContent = `${startPoint.lat.toFixed(5)}, ${startPoint.lng.toFixed(5)}`
         } else {
-          startCoords.textContent = "Click map to set";
+          startCoords.textContent = 'Click map to set'
         }
 
         if (endPoint) {
-          endCoords.textContent = `${endPoint.lat.toFixed(
-            5
-          )}, ${endPoint.lng.toFixed(5)}`;
+          endCoords.textContent = `${endPoint.lat.toFixed(5)}, ${endPoint.lng.toFixed(5)}`
         } else {
-          endCoords.textContent = "Click map to set";
+          endCoords.textContent = 'Click map to set'
         }
 
         // Highlight which point we're selecting next
         if (!startPoint) {
-          startDiv.classList.add("active");
-          endDiv.classList.remove("active");
+          startDiv.classList.add('active')
+          endDiv.classList.remove('active')
         } else if (!endPoint) {
-          startDiv.classList.remove("active");
-          endDiv.classList.add("active");
+          startDiv.classList.remove('active')
+          endDiv.classList.add('active')
         } else {
-          startDiv.classList.remove("active");
-          endDiv.classList.remove("active");
+          startDiv.classList.remove('active')
+          endDiv.classList.remove('active')
         }
 
-        routeBtn.disabled = !(startPoint && endPoint);
+        routeBtn.disabled = !(startPoint && endPoint)
       }
 
-      function showStatus(message, type = "loading") {
-        const statusEl = document.getElementById("statusMessage");
-        statusEl.textContent = message;
-        statusEl.className = `status-message ${type}`;
+      function showStatus(message, type = 'loading') {
+        const statusEl = document.getElementById('statusMessage')
+        statusEl.textContent = message
+        statusEl.className = `status-message ${type}`
       }
 
       function clearStatus() {
-        const statusEl = document.getElementById("statusMessage");
-        statusEl.className = "status-message";
-        statusEl.textContent = "";
+        const statusEl = document.getElementById('statusMessage')
+        statusEl.className = 'status-message'
+        statusEl.textContent = ''
       }
 
       function showRouteInfo(distance, duration) {
-        document.getElementById("routeDistance").textContent =
-          formatDistance(distance);
-        document.getElementById("routeTime").textContent =
-          formatDuration(duration);
-        document.getElementById("routeAccessibility").textContent =
-          "Unknown (no data yet)";
-        document.getElementById("routeInfo").classList.add("visible");
+        document.getElementById('routeDistance').textContent = formatDistance(distance)
+        document.getElementById('routeTime').textContent = formatDuration(duration)
+        document.getElementById('routeInfo').classList.add('visible')
       }
 
       function hideRouteInfo() {
-        document.getElementById("routeInfo").classList.remove("visible");
+        document.getElementById('routeInfo').classList.remove('visible')
       }
 
       function formatDistance(meters) {
-        if (meters < 1000) {
-          return `${Math.round(meters)} m`;
-        }
-        return `${(meters / 1000).toFixed(2)} km`;
+        if (meters < 1000) return `${Math.round(meters)} m`
+        return `${(meters / 1000).toFixed(2)} km`
       }
 
       function formatDuration(seconds) {
-        const mins = Math.round(seconds / 60);
-        if (mins < 60) {
-          return `${mins} min`;
-        }
-        const hours = Math.floor(mins / 60);
-        const remainingMins = mins % 60;
-        return `${hours}h ${remainingMins}m`;
+        const mins = Math.round(seconds / 60)
+        if (mins < 60) return `${mins} min`
+        const hours = Math.floor(mins / 60)
+        const remainingMins = mins % 60
+        return `${hours}h ${remainingMins}m`
       }
 
-      map.on("click", (e) => {
-        const latlng = e.latlng;
+      // Report Barrier button
+      const reportBtn = document.getElementById('reportBtn')
+      reportBtn.addEventListener('click', () => {
+        reportingMode = true
+        showStatus('Click the map to place a barrier', 'loading')
+        setTimeout(() => map.invalidateSize(), 100)
+      })
+
+      // Map click handler: barrier mode takes priority
+      map.on('click', (e) => {
+        if (reportingMode) {
+          const marker = L.marker(e.latlng).addTo(barrierLayer)
+          marker.bindPopup('Barrier reported').openPopup()
+
+          barriers.push({
+            lat: e.latlng.lat,
+            lng: e.latlng.lng,
+            time: Date.now()
+          })
+
+          reportingMode = false
+          clearStatus()
+          console.log('Barriers:', barriers)
+          return
+        }
+
+        // Normal start/end selection
+        const latlng = e.latlng
 
         if (!startPoint) {
-          startPoint = latlng;
-          if (startMarker) map.removeLayer(startMarker);
-          startMarker = L.marker(latlng, { icon: startIcon })
-            .addTo(map)
-            .bindPopup("Start point");
+          startPoint = latlng
+          if (startMarker) map.removeLayer(startMarker)
+          startMarker = L.marker(latlng, { icon: startIcon }).addTo(map).bindPopup('Start point')
         } else if (!endPoint) {
-          endPoint = latlng;
-          if (endMarker) map.removeLayer(endMarker);
-          endMarker = L.marker(latlng, { icon: endIcon })
-            .addTo(map)
-            .bindPopup("End point");
+          endPoint = latlng
+          if (endMarker) map.removeLayer(endMarker)
+          endMarker = L.marker(latlng, { icon: endIcon }).addTo(map).bindPopup('End point')
         } else {
-          // Both set - reset and start over
-          startPoint = latlng;
-          endPoint = null;
+          // Both set, restart
+          startPoint = latlng
+          endPoint = null
 
-          if (startMarker) map.removeLayer(startMarker);
-          if (endMarker) map.removeLayer(endMarker);
-          if (routeLayer) map.removeLayer(routeLayer);
+          if (startMarker) map.removeLayer(startMarker)
+          if (endMarker) map.removeLayer(endMarker)
+          if (routeLayer) map.removeLayer(routeLayer)
 
-          startMarker = L.marker(latlng, { icon: startIcon })
-            .addTo(map)
-            .bindPopup("Start point");
-          endMarker = null;
-          routeLayer = null;
-
-          hideRouteInfo();
+          startMarker = L.marker(latlng, { icon: startIcon }).addTo(map).bindPopup('Start point')
+          endMarker = null
+          routeLayer = null
+          hideRouteInfo()
         }
 
-        updateUI();
-        clearStatus();
-      });
+        updateUI()
+        clearStatus()
+      })
 
       async function getRoute(start, end) {
-        const url = `https://router.project-osrm.org/route/v1/foot/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&steps=true`;
+        const url = `https://router.project-osrm.org/route/v1/foot/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&steps=true`
+        const response = await fetch(url)
+        if (!response.ok) throw new Error(`Routing failed: ${response.status}`)
 
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          throw new Error(`Routing failed: ${response.status}`);
+        const data = await response.json()
+        if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+          throw new Error('No route found')
         }
-
-        const data = await response.json();
-
-        if (data.code !== "Ok" || !data.routes || data.routes.length === 0) {
-          throw new Error("No route found");
-        }
-
-        return data.routes[0];
+        return data.routes[0]
       }
 
       async function calculateAndDisplayRoute() {
-        if (!startPoint || !endPoint) return;
+        if (!startPoint || !endPoint) return
 
-        showStatus("Calculating route...", "loading");
+        showStatus('Calculating route...', 'loading')
 
         try {
-          const route = await getRoute(startPoint, endPoint);
+          const route = await getRoute(startPoint, endPoint)
 
-          if (routeLayer) map.removeLayer(routeLayer);
+          if (routeLayer) map.removeLayer(routeLayer)
 
           routeLayer = L.geoJSON(route.geometry, {
             style: {
-              color: "#2196F3",
+              color: '#2196F3',
               weight: 5,
-              opacity: 0.8,
-            },
-          }).addTo(map);
+              opacity: 0.8
+            }
+          }).addTo(map)
 
-          map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+          map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] })
 
-          showRouteInfo(route.distance, route.duration);
-          clearStatus();
+          showRouteInfo(route.distance, route.duration)
+          clearStatus()
         } catch (error) {
-          console.error("Routing error:", error);
-          showStatus(`Error: ${error.message}`, "error");
+          console.error('Routing error:', error)
+          showStatus(`Error: ${error.message}`, 'error')
         }
       }
 
-      document.getElementById("routeBtn").onclick = calculateAndDisplayRoute;
+      document.getElementById('routeBtn').addEventListener('click', calculateAndDisplayRoute)
 
-      document.getElementById("clearBtn").onclick = () => {
-        startPoint = null;
-        endPoint = null;
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        startPoint = null
+        endPoint = null
 
-        if (startMarker) map.removeLayer(startMarker);
-        if (endMarker) map.removeLayer(endMarker);
-        if (routeLayer) map.removeLayer(routeLayer);
+        if (startMarker) map.removeLayer(startMarker)
+        if (endMarker) map.removeLayer(endMarker)
+        if (routeLayer) map.removeLayer(routeLayer)
 
-        startMarker = null;
-        endMarker = null;
-        routeLayer = null;
+        startMarker = null
+        endMarker = null
+        routeLayer = null
 
-        hideRouteInfo();
-        clearStatus();
-        updateUI();
+        // Clear barriers too (optional). If you want barriers to stay, delete next 2 lines.
+        barrierLayer.clearLayers()
+        barriers.length = 0
 
-        map.setView(UCC_CENTER, 17);
-      };
+        reportingMode = false
+        hideRouteInfo()
+        clearStatus()
+        updateUI()
+        map.setView(UCC_CENTER, 17)
+      })
 
-      // Initialize
-      updateUI();
+      // Initialise UI
+      updateUI()
     </script>
   </body>
 </html>

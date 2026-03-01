@@ -6,6 +6,7 @@
       "properties": {
         "id": "Kane",
         "name": "Kane Building",
+        "wheelchair": "yes",
         "opening_hours": "Mon–Fri 08:00–22:00",
         "floors": [
           "/assets/building_maps/kane_ground.jpg",
@@ -200,6 +201,7 @@
           "properties": {
             "id": "ANMH",
             "name": "Áras na Mac Léinn",
+            "wheelchair": "yes",
             "opening_hours": "Mon–Fri 08:00–22:00",
             "floors": [
               "/assets/building_maps/anml_map_level1.gif",
@@ -522,14 +524,11 @@
             "building:levels": "5",
             "email": "library@ucc.ie",
             "internet_access": "yes",
-            "name": "Boole Library",
+            "id": "Boole Library",
             "opening_hours": "07:30-01:30",
-            "operator": "University College Cork",
-            "operator:type": "public",
             "phone": "+353 21 490-2292",
             "website": "https://libguides.ucc.ie/library",
             "wheelchair": "yes",
-            "year_of_construction": "1980s",
             "floors": []
           },
           "geometry": {
@@ -639,6 +638,970 @@
               ]
             ]
           }
+        },
+    {
+      "type": "FeatureCollection",
+      "generator": "overpass-turbo",
+      "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+      "timestamp": "2026-02-11T07:12:51Z",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/79704849",
+            "access": "private",
+            "addr:city": "Cork",
+            "addr:housename": "University College Cork",
+            "addr:postcode": "T12 ND89",
+            "addr:street": "College Road",
+            "amenity": "library",
+            "building": "university",
+            "building:levels": "5",
+            "email": "library@ucc.ie",
+            "internet_access": "yes",
+            "id": "Boole Library",
+            "opening_hours": "07:30-01:30",
+            "operator": "University College Cork",
+            "operator:type": "public",
+            "phone": "+353 21 490-2292",
+            "website": "https://libguides.ucc.ie/library",
+            "wheelchair": "yes",
+            "year_of_construction": "1980s"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4916018,
+                  51.8924833
+                ],
+                [
+                  -8.4912127,
+                  51.8926014
+                ],
+                [
+                  -8.4910883,
+                  51.8924477
+                ],
+                [
+                  -8.4908673,
+                  51.8925158
+                ],
+                [
+                  -8.4909247,
+                  51.8925854
+                ],
+                [
+                  -8.4908329,
+                  51.8926094
+                ],
+                [
+                  -8.4909273,
+                  51.892726
+                ],
+                [
+                  -8.4909865,
+                  51.8927895
+                ],
+                [
+                  -8.4909479,
+                  51.8928023
+                ],
+                [
+                  -8.4909936,
+                  51.8928889
+                ],
+                [
+                  -8.4909766,
+                  51.8929731
+                ],
+                [
+                  -8.4909604,
+                  51.8930438
+                ],
+                [
+                  -8.4909434,
+                  51.8931142
+                ],
+                [
+                  -8.4909412,
+                  51.8931275
+                ],
+                [
+                  -8.4909994,
+                  51.8931311
+                ],
+                [
+                  -8.4911678,
+                  51.8931481
+                ],
+                [
+                  -8.4913335,
+                  51.8930789
+                ],
+                [
+                  -8.4913723,
+                  51.8930669
+                ],
+                [
+                  -8.4914099,
+                  51.8930552
+                ],
+                [
+                  -8.4914208,
+                  51.8930671
+                ],
+                [
+                  -8.4918472,
+                  51.8929368
+                ],
+                [
+                  -8.4918779,
+                  51.892976
+                ],
+                [
+                  -8.491968,
+                  51.8929502
+                ],
+                [
+                  -8.491924,
+                  51.8928941
+                ],
+                [
+                  -8.4916018,
+                  51.8924833
+                ]
+              ]
+            ]
+          },
+          "id": "way/79704849"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/92914852",
+            "addr:city": "Cork",
+            "addr:housename": "University College Cork",
+            "addr:postcode": "T12 V1WH",
+            "addr:street": "Western Road",
+            "alt_name": "Lewis Glucksman Gallery",
+            "building": "university",
+            "building:levels": "3",
+            "building:material": "concrete",
+            "contact:facebook": "TheGlucksman",
+            "contact:instagram": "theglucksman",
+            "contact:twitter": "glucksman",
+            "email": "info@glucksman.org",
+            "fee": "no",
+            "internet_access": "wlan",
+            "museum": "art",
+            "id": "Glucksman Gallery",
+            "opening_hours": "Tu-Su 11:00-17:00",
+            "outdoor_seating": "no",
+            "phone": "+353 214901844",
+            "tourism": "museum",
+            "website": "https://www.glucksman.org",
+            "wikidata": "Q6536591",
+            "wikimedia_commons": "Category:Glucksman gallery, Cork",
+            "wikipedia": "en:Lewis Glucksman Gallery"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4902285,
+                  51.8948856
+                ],
+                [
+                  -8.4903778,
+                  51.8948856
+                ],
+                [
+                  -8.4904366,
+                  51.8949154
+                ],
+                [
+                  -8.4905744,
+                  51.8948019
+                ],
+                [
+                  -8.4905888,
+                  51.8947876
+                ],
+                [
+                  -8.4905934,
+                  51.8947707
+                ],
+                [
+                  -8.4905846,
+                  51.8947505
+                ],
+                [
+                  -8.4905642,
+                  51.8947346
+                ],
+                [
+                  -8.4904216,
+                  51.8946227
+                ],
+                [
+                  -8.4903953,
+                  51.894622
+                ],
+                [
+                  -8.4903437,
+                  51.8946299
+                ],
+                [
+                  -8.4903241,
+                  51.8946354
+                ],
+                [
+                  -8.4902363,
+                  51.8945241
+                ],
+                [
+                  -8.4899547,
+                  51.8946224
+                ],
+                [
+                  -8.4900742,
+                  51.8946678
+                ],
+                [
+                  -8.4901327,
+                  51.8947455
+                ],
+                [
+                  -8.4901681,
+                  51.8947912
+                ],
+                [
+                  -8.4902285,
+                  51.8948856
+                ]
+              ]
+            ]
+          },
+          "id": "way/92914852"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/476326517",
+            "addr:city": "Cork",
+            "addr:housename": "University College Cork",
+            "addr:street": "Western Road",
+            "building": "university",
+            "id": "Roseleigh"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4955052,
+                  51.8950837
+                ],
+                [
+                  -8.4954877,
+                  51.8950451
+                ],
+                [
+                  -8.4955119,
+                  51.8950409
+                ],
+                [
+                  -8.4954971,
+                  51.8950084
+                ],
+                [
+                  -8.4954713,
+                  51.8950129
+                ],
+                [
+                  -8.4954485,
+                  51.8949628
+                ],
+                [
+                  -8.4952931,
+                  51.8949897
+                ],
+                [
+                  -8.4953482,
+                  51.8951108
+                ],
+                [
+                  -8.4955052,
+                  51.8950837
+                ]
+              ]
+            ]
+          },
+          "id": "way/476326517"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/476326518",
+            "addr:city": "Cork",
+            "addr:housename": "University College Cork",
+            "addr:street": "Western Road",
+            "building": "university",
+            "id": "The Laurels"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4955333,
+                  51.8949526
+                ],
+                [
+                  -8.4955781,
+                  51.8950651
+                ],
+                [
+                  -8.4957313,
+                  51.8950419
+                ],
+                [
+                  -8.4957216,
+                  51.8950176
+                ],
+                [
+                  -8.4957553,
+                  51.8950109
+                ],
+                [
+                  -8.4957364,
+                  51.8949688
+                ],
+                [
+                  -8.4956985,
+                  51.8949745
+                ],
+                [
+                  -8.4956808,
+                  51.8949302
+                ],
+                [
+                  -8.4955333,
+                  51.8949526
+                ]
+              ]
+            ]
+          },
+          "id": "way/476326518"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/636650881",
+            "addr:city": "Cork",
+            "addr:housename": "Amnis House",
+            "addr:postcode": "T12 E2RF",
+            "addr:street": "Western Road",
+            "building": "dormitory",
+            "building:levels": "6",
+            "description": "Our student accommodation in Cork, Amnis House, is perfectly situated near the centre of Cork City. Only minutes from the University College Cork and close to the Cork College of Commerce, St. John's Central College and CIT.",
+            "id": "Amnis House",
+            "operator": "Uninest Students"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4869697,
+                  51.8957902
+                ],
+                [
+                  -8.4868329,
+                  51.8955148
+                ],
+                [
+                  -8.4867196,
+                  51.8953813
+                ],
+                [
+                  -8.4862929,
+                  51.8955053
+                ],
+                [
+                  -8.4863512,
+                  51.8956226
+                ],
+                [
+                  -8.4866061,
+                  51.8955658
+                ],
+                [
+                  -8.4866747,
+                  51.8956965
+                ],
+                [
+                  -8.4862789,
+                  51.895777
+                ],
+                [
+                  -8.4860519,
+                  51.8957998
+                ],
+                [
+                  -8.4859959,
+                  51.8959672
+                ],
+                [
+                  -8.4859876,
+                  51.895992
+                ],
+                [
+                  -8.4869697,
+                  51.8957902
+                ]
+              ]
+            ]
+          },
+          "id": "way/636650881"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/636803662",
+            "addr:city": "Cork",
+            "addr:housename": "Ardpatrick",
+            "addr:street": "College Road",
+            "alt_name": "UCC Student Health",
+            "amenity": "clinic",
+            "building": "university",
+            "building:levels": "2",
+            "facade:material": "plaster",
+            "healthcare": "clinic",
+            "healthcare:speciality": "general;vaccination;psychiatry;counselling;physiotherapist",
+            "id": "Student Health Department",
+            "name:en": "Student Health Department",
+            "name:ga": "Seirbh\u00eds\u00ed Sl\u00e1inte na Mac L\u00e9inn",
+            "operator": "University College Cork",
+            "operator:type": "public",
+            "operator:wikidata": "Q1574185",
+            "operator:wikipedia": "en:University College Cork",
+            "roof:colour": "grey",
+            "roof:material": "slate",
+            "roof:shape": "gabled",
+            "url": "https://www.ucc.ie/en/studenthealth/"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4906649,
+                  51.8918772
+                ],
+                [
+                  -8.4905184,
+                  51.8918869
+                ],
+                [
+                  -8.4905335,
+                  51.8919738
+                ],
+                [
+                  -8.4905535,
+                  51.8919725
+                ],
+                [
+                  -8.4905684,
+                  51.8919715
+                ],
+                [
+                  -8.4905785,
+                  51.8920293
+                ],
+                [
+                  -8.4905292,
+                  51.8920326
+                ],
+                [
+                  -8.4905437,
+                  51.892116
+                ],
+                [
+                  -8.4907036,
+                  51.8921054
+                ],
+                [
+                  -8.4906894,
+                  51.8920214
+                ],
+                [
+                  -8.4906649,
+                  51.8918772
+                ]
+              ]
+            ]
+          },
+          "id": "way/636803662"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/637978902",
+            "architect": "O'Donnell+Tuomey",
+            "building": "university",
+            "id": "The Hub",
+            "name:ga": "An Mol",
+            "operator": "University College Cork",
+            "smoking": "outside",
+            "start_date": "2020-02-10"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4935644,
+                  51.893334
+                ],
+                [
+                  -8.493697,
+                  51.893187
+                ],
+                [
+                  -8.4937035,
+                  51.893175
+                ],
+                [
+                  -8.4937022,
+                  51.893163
+                ],
+                [
+                  -8.4936939,
+                  51.8931474
+                ],
+                [
+                  -8.4935603,
+                  51.8930471
+                ],
+                [
+                  -8.493515,
+                  51.8930281
+                ],
+                [
+                  -8.4933506,
+                  51.8929625
+                ],
+                [
+                  -8.4933283,
+                  51.8929583
+                ],
+                [
+                  -8.4932984,
+                  51.8929595
+                ],
+                [
+                  -8.4932087,
+                  51.892985
+                ],
+                [
+                  -8.4931406,
+                  51.8930044
+                ],
+                [
+                  -8.493112,
+                  51.8929668
+                ],
+                [
+                  -8.493136,
+                  51.892959
+                ],
+                [
+                  -8.4930628,
+                  51.8928656
+                ],
+                [
+                  -8.4928669,
+                  51.892924
+                ],
+                [
+                  -8.4929401,
+                  51.8930175
+                ],
+                [
+                  -8.4929828,
+                  51.8930044
+                ],
+                [
+                  -8.4930155,
+                  51.8930493
+                ],
+                [
+                  -8.4930105,
+                  51.8930508
+                ],
+                [
+                  -8.4930345,
+                  51.8930818
+                ],
+                [
+                  -8.4930413,
+                  51.8930798
+                ],
+                [
+                  -8.49308,
+                  51.8931316
+                ],
+                [
+                  -8.4932709,
+                  51.8933812
+                ],
+                [
+                  -8.4933476,
+                  51.8934818
+                ],
+                [
+                  -8.4936175,
+                  51.8934054
+                ],
+                [
+                  -8.4935644,
+                  51.893334
+                ]
+              ]
+            ]
+          },
+          "id": "way/637978902"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/1320114526",
+            "id": "2 Bloomfield Terrace",
+            "addr:housenumber": "2",
+            "addr:street": "Bloomfield Terrace",
+            "building": "university",
+            "operator": "University College Cork"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4953223,
+                  51.8942841
+                ],
+                [
+                  -8.495285,
+                  51.8942911
+                ],
+                [
+                  -8.4952747,
+                  51.8942701
+                ],
+                [
+                  -8.4952272,
+                  51.8942789
+                ],
+                [
+                  -8.4952738,
+                  51.894374
+                ],
+                [
+                  -8.4953587,
+                  51.8943586
+                ],
+                [
+                  -8.4953223,
+                  51.8942841
+                ]
+              ]
+            ]
+          },
+          "id": "way/1320114526"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/1320114527",
+            "id": "8 Bloomfield Terrace",
+            "addr:housenumber": "8",
+            "addr:street": "Bloomfield Terrace",
+            "building": "university",
+            "operator": "University College Cork"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.495837,
+                  51.894272
+                ],
+                [
+                  -8.4957876,
+                  51.89417
+                ],
+                [
+                  -8.4957005,
+                  51.8941861
+                ],
+                [
+                  -8.4957153,
+                  51.8942166
+                ],
+                [
+                  -8.4957499,
+                  51.8942878
+                ],
+                [
+                  -8.495837,
+                  51.894272
+                ]
+              ]
+            ]
+          },
+          "id": "way/1320114527"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/1320114528",
+            "id": "7 Bloomfield Terrace",
+            "addr:housenumber": "7",
+            "addr:street": "Bloomfield Terrace",
+            "building": "university",
+            "operator": "University College Cork"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4957499,
+                  51.8942878
+                ],
+                [
+                  -8.4957153,
+                  51.8942166
+                ],
+                [
+                  -8.4956756,
+                  51.894224
+                ],
+                [
+                  -8.4956629,
+                  51.8941982
+                ],
+                [
+                  -8.4956267,
+                  51.8942049
+                ],
+                [
+                  -8.4956742,
+                  51.8943015
+                ],
+                [
+                  -8.4957499,
+                  51.8942878
+                ]
+              ]
+            ]
+          },
+          "id": "way/1320114528"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/1320114529",
+            "id": "6 Bloomfield Terrace",
+            "addr:housenumber": "6",
+            "addr:street": "Bloomfield Terrace",
+            "building": "university",
+            "operator": "University College Cork"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4956267,
+                  51.8942049
+                ],
+                [
+                  -8.4956042,
+                  51.8942091
+                ],
+                [
+                  -8.4956152,
+                  51.894232
+                ],
+                [
+                  -8.4955927,
+                  51.8942361
+                ],
+                [
+                  -8.4955817,
+                  51.8942133
+                ],
+                [
+                  -8.4955512,
+                  51.8942189
+                ],
+                [
+                  -8.4955975,
+                  51.8943154
+                ],
+                [
+                  -8.4956742,
+                  51.8943015
+                ],
+                [
+                  -8.4956267,
+                  51.8942049
+                ]
+              ]
+            ]
+          },
+          "id": "way/1320114529"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/1320114530",
+            "id": "5 Bloomfield Terrace",
+            "addr:housenumber": "5",
+            "addr:street": "Bloomfield Terrace",
+            "building": "university",
+            "operator": "University College Cork"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4955975,
+                  51.8943154
+                ],
+                [
+                  -8.4955512,
+                  51.8942189
+                ],
+                [
+                  -8.4954738,
+                  51.8942332
+                ],
+                [
+                  -8.4954837,
+                  51.8942541
+                ],
+                [
+                  -8.4955196,
+                  51.8943295
+                ],
+                [
+                  -8.4955975,
+                  51.8943154
+                ]
+              ]
+            ]
+          },
+          "id": "way/1320114530"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/1320114531",
+            "id": "4 Bloomfield Terrace",
+            "addr:housenumber": "4",
+            "addr:street": "Bloomfield Terrace",
+            "building": "university",
+            "operator": "University College Cork"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4954165,
+                  51.8942439
+                ],
+                [
+                  -8.4953902,
+                  51.8942487
+                ],
+                [
+                  -8.4954351,
+                  51.8943448
+                ],
+                [
+                  -8.4955196,
+                  51.8943295
+                ],
+                [
+                  -8.4954837,
+                  51.8942541
+                ],
+                [
+                  -8.495426,
+                  51.8942644
+                ],
+                [
+                  -8.4954165,
+                  51.8942439
+                ]
+              ]
+            ]
+          },
+          "id": "way/1320114531"
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "@id": "way/1320114532",
+            "id": "3 Bloomfield Terrace",
+            "addr:housenumber": "3",
+            "addr:street": "Bloomfield Terrace",
+            "building": "university",
+            "operator": "University College Cork"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -8.4954351,
+                  51.8943448
+                ],
+                [
+                  -8.4953902,
+                  51.8942487
+                ],
+                [
+                  -8.4953121,
+                  51.8942632
+                ],
+                [
+                  -8.4953223,
+                  51.8942841
+                ],
+                [
+                  -8.4953587,
+                  51.8943586
+                ],
+                [
+                  -8.4954351,
+                  51.8943448
+                ]
+              ]
+            ]
+          },
+          "id": "way/1320114532"
         }
+      ]
+    }
   ]
 }

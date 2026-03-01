@@ -1,0 +1,7 @@
+{
+  "name": "ucc-accessibility-map",
+  "type": "module",
+  "private": true,
+  "dependencies": { "express": "^4.19.2" },
+  "scripts": { "dev": "node server.js" }
+}

@@ -280,19 +280,41 @@ document.addEventListener('DOMContentLoaded', () => {
         onEachFeature: (feature, layer) => {
           const p = feature.properties || {}
 
-          const floorsHtml = (p.floors || [])
-            .map(
-              (img, i) =>
-                `<div>
-                  <strong>Floor ${i + 1}</strong><br/>
-                  <img src="${img}" style="width:200px; margin-top:4px;" />
-                </div>`
+          const floors = Array.isArray(p.floors) ? p.floors : []
+          const hasFloors = floors.length > 0
+
+          // Create a token so the new tab can read floor data from localStorage
+          const token = `${(p.id || p.name || 'building').toString().replace(/\s+/g, '-')}-${Date.now()}`
+
+          // Save data for the new tab
+          if (hasFloors) {
+            localStorage.setItem(
+              `ucc_floorplans_${token}`,
+              JSON.stringify({
+                name: p.name || 'Building',
+                floors
+              })
             )
-            .join('<hr/>')
+          }
+
+          const floorsHtml = hasFloors
+            ? `<button class="btn-secondary" type="button"
+                  onclick="window.open('/floorplans.html?token=${encodeURIComponent(token)}','_blank','noopener')">
+                  Open floor plan in new tab
+               </button>`
+            : ''
 
           const popupHtml = `
             <h3>${p.name || 'Building'}</h3>
-            ${p.opening_hours ? `<p><strong>Opening hours:</strong><br/>${p.opening_hours}</p>` : ''}
+
+            ${p.opening_hours
+              ? `<p><strong>Opening hours:</strong><br/>${p.opening_hours}</p>`
+              : ''}
+
+            ${p.wheelchair
+              ? `<p><strong>Wheelchair Accessibility:</strong><br/>${p.wheelchair}</p>`
+              : ''}
+
             ${floorsHtml}
           `
 

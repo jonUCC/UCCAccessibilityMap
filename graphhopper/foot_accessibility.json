@@ -1,0 +1,10 @@
+{
+  "speed": [
+    { "if": "true", "limit_to": "foot_average_speed" }
+  ],
+  "priority": [
+    { "if": "road_class == STEPS", "multiply_by": 0 },
+    { "if": "average_slope > 0.05", "multiply_by": 0.6 },
+    { "if": "average_slope > 0.08", "multiply_by": 0.3 }
+  ]
+}

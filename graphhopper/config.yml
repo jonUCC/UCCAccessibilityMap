@@ -1,0 +1,56 @@
+graphhopper:
+  datareader.file: cork_city_patched.osm.pbf
+  graph.location: graph-cache
+
+  import.osm.ignored_highways: ""
+
+  profiles:
+    - name: foot
+      weighting: custom
+      custom_model_files: [foot_accessibility.json]
+
+  profiles_ch: []
+  profiles_lm: []
+
+  graph.encoded_values: |
+    road_class,
+    foot_access,
+    foot_priority,
+    foot_average_speed,
+    country,
+    average_slope,
+    max_slope,
+    roundabout
+
+  #### Elevation ####
+  graph.elevation.provider: srtm
+  graph.elevation.cache_dir: elevation-cache
+  graph.elevation.dataaccess: MMAP
+  graph.elevation.interpolate: bilinear
+
+  # Optional smoothing (helps reduce noisy slope spikes)
+  graph.elevation.edge_smoothing: moving_average
+  graph.elevation.edge_smoothing.moving_average.window_size: 150
+
+  #### Storage / performance ####
+  graph.dataaccess.default_type: MMAP
+
+  prepare.min_network_size: 200
+  prepare.subnetworks.threads: 1
+
+  routing.snap_preventions_default: tunnel,bridge,ferry
+  routing.non_ch.max_waypoint_distance: 1000000
+
+server:
+  application_connectors:
+    - type: http
+      port: 8989
+      bind_host: localhost
+  admin_connectors:
+    - type: http
+      port: 8990
+      bind_host: localhost
+
+logging:
+  appenders:
+    - type: console

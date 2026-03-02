@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Floor Plans</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="/src/css/style.css" />
+    <style>
+        body { margin: 0; padding: 16px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+        .wrap { max-width: 1100px; margin: 0 auto; }
+        .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .plans { display: grid; gap: 16px; margin-top: 16px; }
+        .plan-card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; background: #fff; }
+        .plan-card img { width: 100%; height: auto; border-radius: 8px; }
+        .muted { color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="top">
+        <h2 id="title">Floor Plans</h2>
+        <a href="/" class="muted">← Back to map</a>
+    </div>
+
+    <div id="status" class="muted"></div>
+    <div id="plans" class="plans"></div>
+</div>
+
+<script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      const statusEl = document.getElementById("status");
+      const plansEl = document.getElementById("plans");
+      const titleEl = document.getElementById("title");
+
+      if (!token) {
+        statusEl.textContent = "Missing token. Please reopen from the map popup.";
+        return;
+      }
+
+      const key = "ucc_floorplans_" + token;
+      const raw = localStorage.getItem(key);
+
+      if (!raw) {
+        statusEl.textContent = "No floor plan data found (it may have expired). Reopen from the map popup.";
+        return;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        statusEl.textContent = "Floor plan data is corrupted. Reopen from the map popup.";
+        return;
+      }
+
+      const name = data?.name || "Floor Plans";
+      const floors = Array.isArray(data?.floors) ? data.floors : [];
+
+      titleEl.textContent = name + " – Floor Plans";
+
+      if (floors.length === 0) {
+        statusEl.textContent = "No floor plans available for this building.";
+        return;
+      }
+
+      statusEl.textContent = "Tip: Use browser zoom (Ctrl/+ or Cmd/+) to enlarge.";
+
+      plansEl.innerHTML = floors
+        .map((src, i) => {
+          const floorNo = i + 1;
+          return `
+            <div class="plan-card">
+              <div class="muted" style="margin-bottom:8px;"><strong>Floor ${floorNo}</strong></div>
+              <a href="${src}" target="_blank" rel="noopener noreferrer" class="muted">Open image directly</a>
+              <div style="margin-top:8px;">
+                <img src="${src}" alt="Floor ${floorNo} plan" />
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+    })();
+</script>
+</body>
+</html>

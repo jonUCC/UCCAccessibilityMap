@@ -24,6 +24,44 @@
         route with an accessibility score.
       </div>
 
+        <!-- Routing mode selector -->
+        <div class="profile-selector" style="margin-top:12px;">
+            <label style="display:block; margin-bottom:6px;">Routing mode:</label>
+            <label style="margin-right:12px;">
+                <input type="radio" name="routeMode" value="map" checked />
+                Click map
+            </label>
+            <label>
+                <input type="radio" name="routeMode" value="building" />
+                Buildings
+            </label>
+        </div>
+
+        <!-- Building mode controls -->
+        <div id="buildingModeControls" style="display:none; margin-top:10px;">
+            <div class="profile-selector">
+                <label for="startBuilding">Start building:</label>
+                <select id="startBuilding">
+                    <option value="">Select…</option>
+                </select>
+            </div>
+
+            <div class="profile-selector">
+                <label for="endBuilding">End building:</label>
+                <select id="endBuilding">
+                    <option value="">Select…</option>
+                </select>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <button id="swapBuildings" class="btn-secondary" type="button">Swap</button>
+            </div>
+
+            <div class="instructions" style="margin-top:10px;">
+                Tip: building routes use each building polygon’s center as the start/end point.
+            </div>
+        </div>
+
       <!-- Profile selector -->
       <div class="profile-selector">
         <label for="profileSelect">Mobility profile:</label>

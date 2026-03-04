@@ -2,74 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>UCC Accessibility Map</title>
+    <title>UCC AccessPath Platform</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""
-    />
-    <link rel="stylesheet" href="/src/css/style.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="./src/css/style.css" />
   </head>
-
   <body>
     <div class="control-panel">
-      <h3>♿ Accessibility Router</h3>
-
+      <h3>UCC AccessPath</h3>
       <div class="instructions">
-        Choose your <strong>mobility profile</strong>, click the map to set
-        <strong>start</strong> and <strong>end</strong> points, then get a
-        route with an accessibility score.
-      </div>
-
-        <!-- Routing mode selector -->
-        <div class="profile-selector" style="margin-top:12px;">
-            <label style="display:block; margin-bottom:6px;">Routing mode:</label>
-            <label style="margin-right:12px;">
-                <input type="radio" name="routeMode" value="map" checked />
-                Click map
-            </label>
-            <label>
-                <input type="radio" name="routeMode" value="building" />
-                Buildings
-            </label>
-        </div>
-
-        <!-- Building mode controls -->
-        <div id="buildingModeControls" style="display:none; margin-top:10px;">
-            <div class="profile-selector">
-                <label for="startBuilding">Start building:</label>
-                <select id="startBuilding">
-                    <option value="">Select…</option>
-                </select>
-            </div>
-
-            <div class="profile-selector">
-                <label for="endBuilding">End building:</label>
-                <select id="endBuilding">
-                    <option value="">Select…</option>
-                </select>
-            </div>
-
-            <div style="display:flex; gap:8px; margin-top:8px;">
-                <button id="swapBuildings" class="btn-secondary" type="button">Swap</button>
-            </div>
-
-            <div class="instructions" style="margin-top:10px;">
-                Tip: building routes use each building polygon’s center as the start/end point.
-            </div>
-        </div>
-
-      <!-- Profile selector -->
-      <div class="profile-selector">
-        <label for="profileSelect">Mobility profile:</label>
-        <select id="profileSelect">
-          <option value="step-free">Step-free (wheelchair)</option>
-          <option value="gentle-gradient">Gentle gradient (crutches / pain)</option>
-          <option value="low-energy">Low energy / fatigue</option>
-        </select>
+        Select Start and End points. Use <strong>Report Barrier</strong> to flag structural obstacles.
       </div>
 
       <div id="startPoint" class="point-display active">
@@ -82,18 +24,16 @@
         <span class="point-coords" id="endCoords">Click map to set</span>
       </div>
 
-      <div>
-        <button id="reportBtn" class="btn-secondary" type="button">
-          Report Barrier
-        </button>
+      <div class="button-group">
+        <button id="reportBtn" class="btn-warning" type="button">🚩 Report Barrier</button>
       </div>
 
-      <div>
-        <button id="routeBtn" class="btn-primary" disabled type="button">
-          Get Route
-        </button>
+      <div class="button-group">
+        <button id="routeBtn" class="btn-primary" disabled type="button">Get Route</button>
         <button id="clearBtn" class="btn-secondary" type="button">Clear</button>
       </div>
+      
+      <button id="adminToggleBtn" class="btn-dark" type="button" style="margin-top: 15px; width: 100%;">View Admin Data</button>
 
       <div id="statusMessage" class="status-message"></div>
 
@@ -106,27 +46,64 @@
           <span class="route-stat-label">Est. time:</span>
           <span class="route-stat-value" id="routeTime">-</span>
         </div>
-        <div class="route-stat">
-          <span class="route-stat-label">Accessibility:</span>
-          <span class="route-stat-value" id="routeAccessibility">-</span>
+        <div class="route-stat" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ccc;">
+          <span class="route-stat-label">Access Confidence:</span>
+          <span class="route-stat-value" id="routeConfidence" style="color: #2196f3;">-</span>
         </div>
-
-        <!-- Warnings list -->
-        <div id="routeWarnings" class="route-warnings"></div>
       </div>
+    </div>
+
+    <div id="comprehensiveReportModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" id="closeReportModal">&times;</span>
+        <h2>Submit Barrier Evidence</h2>
+        <p>You selected coordinates: <span id="reportCoordinateDisplay" style="font-family: monospace; color: #555;"></span></p>
+        
+        <form id="evidenceForm">
+          <label class="form-label">Classification</label>
+          <select id="barrierTypeSelect" required>
+            <option value="">Select obstacle nature...</option>
+            <option value="Broken Lift">Broken Lift or Elevator</option>
+            <option value="Steep Gradient">Unmanageable Gradient</option>
+            <option value="Missing Ramp">Stairs without Ramp Access</option>
+            <option value="Construction">Construction Blockage</option>
+            <option value="Uneven Surface">Severe Cobblestones / Uneven Paving</option>
+          </select>
+
+          <label class="form-label">Severity Level</label>
+          <select id="severitySelect" required>
+            <option value="High">High - Completely impassable</option>
+            <option value="Medium" selected>Medium - Major detour required</option>
+            <option value="Low">Low - Difficult but manageable</option>
+          </select>
+
+          <label class="form-label">Photographic Evidence</label>
+          <input type="file" id="barrierPhoto" accept="image/*" capture="environment" />
+
+          <label class="form-label">Contextual Details</label>
+          <textarea id="barrierDescription" placeholder="Provide specific details about the obstruction..." required rows="3"></textarea>
+          
+          <button type="submit" class="btn-primary" id="submitEvidenceBtn">Upload Record</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="adminSidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>Backend Database</h2>
+            <span class="close-sidebar" id="closeSidebar">&times;</span>
+        </div>
+        <div class="sidebar-content" id="adminDataContainer">
+            <p>Initiating database query...</p>
+        </div>
     </div>
 
     <div id="map"></div>
 
-    <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-      crossorigin=""
-    ></script>
-
-    <!-- Accessibility data and scoring engine (load before map.js) -->
-    <script src="/src/js/accessibility-data.js"></script>
-    <script src="/src/js/accessibility-scorer.js"></script>
-    <script src="/src/js/map.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script src="./src/js/accessibility-data.js"></script>
+    <script src="./src/js/accessibility-scorer.js"></script>
+    <script type="module" src="./src/js/map.js"></script>
   </body>
 </html>

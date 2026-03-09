@@ -116,6 +116,83 @@
       </div>
     </div>
 
+    <!-- Barrier report modal -->
+    <div id="barrierModal" class="modal">
+        <div class="modal-content">
+            <span id="closeBarrierModal" class="close-btn" style="cursor:pointer;">&times;</span>
+            <h2>Submit Barrier Report</h2>
+
+            <p>
+                Selected coordinates:
+                <span id="reportCoordinateDisplay" style="font-family: monospace; color: #555;"></span>
+            </p>
+
+            <form id="barrierForm">
+                <label class="form-label" for="barrierTypeSelect">Barrier type</label>
+                <select id="barrierTypeSelect" required>
+                    <option value="">Select barrier type</option>
+                    <option value="Broken Lift">Broken Lift or Elevator</option>
+                    <option value="Steep Gradient">Steep Gradient</option>
+                    <option value="Missing Ramp">Missing Ramp / Stairs Only</option>
+                    <option value="Construction">Construction Blockage</option>
+                    <option value="Uneven Surface">Uneven Surface</option>
+                </select>
+
+                <label class="form-label" for="severitySelect" style="margin-top:10px;">Severity</label>
+                <select id="severitySelect" required>
+                    <option value="High">High - Completely impassable</option>
+                    <option value="Medium" selected>Medium - Major detour required</option>
+                    <option value="Low">Low - Difficult but manageable</option>
+                </select>
+
+                <label class="form-label" for="barrierPhoto" style="margin-top:10px;">Photo (optional)</label>
+                <input type="file" id="barrierPhoto" accept="image/*" />
+
+                <label class="form-label" for="barrierDescription" style="margin-top:10px;">Description</label>
+                <textarea
+                        id="barrierDescription"
+                        rows="4"
+                        placeholder="Describe the issue"
+                        required
+                ></textarea>
+
+                <div style="margin-top:14px;">
+                    <button type="submit" class="btn-primary">Submit Barrier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Route feedback -->
+    <div id="feedbackPanel" class="control-panel" style="margin-top:12px; display:none;">
+        <h4>Route Feedback</h4>
+        <form id="feedbackForm">
+            <label for="feedbackName">Name (optional)</label>
+            <input id="feedbackName" type="text" placeholder="Your name" />
+
+            <label for="feedbackRating" style="margin-top:10px;">Rating</label>
+            <select id="feedbackRating" required>
+                <option value="">Select rating</option>
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Good</option>
+                <option value="3">3 - Okay</option>
+                <option value="2">2 - Poor</option>
+                <option value="1">1 - Very poor</option>
+            </select>
+
+            <label for="feedbackComment" style="margin-top:10px;">Comment</label>
+            <textarea
+                    id="feedbackComment"
+                    rows="3"
+                    placeholder="Was the route useful?"
+            ></textarea>
+
+            <div style="margin-top:12px;">
+                <button type="submit" class="btn-secondary">Submit Feedback</button>
+            </div>
+        </form>
+    </div>
+
     <div id="map"></div>
 
     <script

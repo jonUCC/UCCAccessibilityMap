@@ -1,7 +1,7 @@
 # GraphHopper Local Server
 
 ## Requires
-Java 21+, Node.js v18+
+Java 21+, Node.js v18+, multer, sqlite3, cors
 
 ### Step 1
 navigate to UCCAccessibilityMap/graphhopper

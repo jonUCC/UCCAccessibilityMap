@@ -37,9 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let routeLayer = null
   let hazardMarkersLayer = L.layerGroup().addTo(map)
 
-  // State: barrier reporting 
+  // State: barrier reporting
   let reportingMode = false
-  const barriers = []
+  let pendingBarrierLatLng = null
+  let barriers = []
   const barrierLayer = L.layerGroup().addTo(map)
 
   // State: active profile 
@@ -62,6 +63,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const routeTimeEl = document.getElementById('routeTime')
   const routeAccessibilityEl = document.getElementById('routeAccessibility')
   const routeWarningsEl = document.getElementById('routeWarnings')
+  const feedbackPanel = document.getElementById('feedbackPanel')
+
+  // Barrier modal elements
+  const barrierModal = document.getElementById('barrierModal')
+  const closeBarrierModalBtn = document.getElementById('closeBarrierModal')
+  const barrierForm = document.getElementById('barrierForm')
+  const reportCoordinateDisplay = document.getElementById('reportCoordinateDisplay')
+  const barrierTypeSelect = document.getElementById('barrierTypeSelect')
+  const severitySelect = document.getElementById('severitySelect')
+  const barrierPhotoInput = document.getElementById('barrierPhoto')
+  const barrierDescriptionInput = document.getElementById('barrierDescription')
+
+  // Feedback form elements
+  const feedbackForm = document.getElementById('feedbackForm')
+  const feedbackNameInput = document.getElementById('feedbackName')
+  const feedbackRatingInput = document.getElementById('feedbackRating')
+  const feedbackCommentInput = document.getElementById('feedbackComment')
 
   // Routing mode state
   let routeMode = 'map' // 'map' | 'building'
@@ -114,6 +132,148 @@ document.addEventListener('DOMContentLoaded', () => {
     statusEl.className = 'status-message'
   }
 
+  function openBarrierModal(latlng) {
+    pendingBarrierLatLng = latlng
+
+    if (reportCoordinateDisplay) {
+      reportCoordinateDisplay.textContent =
+        `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`
+    }
+
+    if (barrierForm) barrierForm.reset()
+    if (barrierModal) barrierModal.style.display = 'block'
+  }
+
+  function closeBarrierModal() {
+    pendingBarrierLatLng = null
+    if (barrierModal) barrierModal.style.display = 'none'
+  }
+
+  async function loadReportedBarriers() {
+    try {
+      const res = await fetch('/api/barriers')
+      if (!res.ok) throw new Error('Failed to load barriers')
+
+      const rows = await res.json()
+
+      barriers = rows.filter((b) => b.status !== 'resolved')
+
+      barrierLayer.clearLayers()
+
+      barriers.forEach((b) => {
+        const popupHtml = `
+          <div class="barrier-popup" data-barrier-id="${b.id}">
+            <strong>${b.barrier_type}</strong><br/>
+            Severity: ${b.severity}<br/>
+            ${b.description ? `<div style="margin-top:6px;">${b.description}</div>` : ''}
+            ${b.image_path ? `<div style="margin-top:8px;"><img src="${b.image_path}" alt="Barrier photo" style="max-width:220px; width:100%; border-radius:8px;" /></div>` : ''}
+            <div style="margin-top:6px;"><small>Status: ${b.status || 'pending'}</small></div>
+            <div style="margin-top:10px;">
+              <button
+                type="button"
+                class="mark-fixed-btn btn-secondary"
+                data-barrier-id="${b.id}"
+              >
+                Mark Fixed
+              </button>
+            </div>
+          </div>
+        `
+
+        const marker = L.marker([Number(b.lat), Number(b.lng)])
+          .addTo(barrierLayer)
+          .bindPopup(popupHtml)
+
+        marker.on('popupopen', (e) => {
+          const popupEl = e.popup.getElement()
+          if (!popupEl) return
+
+          const btn = popupEl.querySelector('.mark-fixed-btn')
+          if (!btn) return
+
+          btn.addEventListener('click', async () => {
+            const barrierId = btn.getAttribute('data-barrier-id')
+            if (!barrierId) return
+
+            const confirmed = window.confirm('Mark this barrier as fixed?')
+            if (!confirmed) return
+
+            try {
+              await markBarrierResolved(barrierId)
+              map.closePopup()
+              await loadReportedBarriers()
+              showStatus('Barrier marked as fixed.', 'success')
+            } catch (err) {
+              console.error(err)
+              showStatus(err.message || 'Failed to update barrier.', 'error')
+            }
+          }, { once: true })
+        })
+      })
+    } catch (err) {
+      console.error('Could not load reported barriers:', err)
+    }
+  }
+
+  async function submitBarrierReport() {
+    if (!pendingBarrierLatLng) {
+      throw new Error('No barrier coordinates selected')
+    }
+
+    const formData = new FormData()
+    formData.append('lat', String(pendingBarrierLatLng.lat))
+    formData.append('lng', String(pendingBarrierLatLng.lng))
+    formData.append('type', barrierTypeSelect.value)
+    formData.append('severity', severitySelect.value)
+    formData.append('description', barrierDescriptionInput.value.trim())
+
+    if (barrierPhotoInput && barrierPhotoInput.files && barrierPhotoInput.files[0]) {
+      formData.append('photo', barrierPhotoInput.files[0])
+    }
+
+    const res = await fetch('/api/barriers', {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || 'Failed to submit barrier')
+    }
+
+    return res.json()
+  }
+
+    async function markBarrierResolved(barrierId) {
+      const res = await fetch(`/api/barriers/${barrierId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'resolved' })
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to update barrier status')
+      }
+
+      return res.json()
+    }
+
+  async function submitRouteFeedback(payload) {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || 'Failed to submit feedback')
+    }
+
+    return res.json()
+  }
+
   function haversineMeters(a, b) {
     const toRad = (deg) => (deg * Math.PI) / 180
     const R = 6371000
@@ -158,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!routeInfoEl) return
     if (routeDistanceEl) routeDistanceEl.textContent = formatDistance(distance)
     if (routeTimeEl) routeTimeEl.textContent = formatDuration(duration)
-
+    if (feedbackPanel) feedbackPanel.style.display = 'block'
     // Accessibility score display
     if (routeAccessibilityEl && scoring) {
       const levelLabels = { high: 'High ✓', medium: 'Medium ⚠', low: 'Low ✗' }
@@ -360,6 +520,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   displayHazardsOnMap()
+
+  loadReportedBarriers()
+
   // Optional: load buildings overlay
   async function loadBuildings() {
     try {
@@ -481,23 +644,65 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('reportBtn not found in HTML')
   }
 
+  if (closeBarrierModalBtn) {
+    closeBarrierModalBtn.addEventListener('click', closeBarrierModal)
+  }
+
+  if (barrierModal) {
+    barrierModal.addEventListener('click', (e) => {
+      if (e.target === barrierModal) closeBarrierModal()
+    })
+  }
+
+  if (barrierForm) {
+    barrierForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      try {
+        showStatus('Submitting barrier report...', 'loading')
+        await submitBarrierReport()
+        closeBarrierModal()
+        await loadReportedBarriers()
+        showStatus('Barrier report submitted successfully.', 'success')
+      } catch (err) {
+        console.error(err)
+        showStatus(err.message || 'Failed to submit barrier report.', 'error')
+      }
+    })
+  }
+
+    if (feedbackForm) {
+      feedbackForm.addEventListener('submit', async (e) => {
+        e.preventDefault()
+
+        try {
+          await submitRouteFeedback({
+            name: feedbackNameInput ? feedbackNameInput.value.trim() : '',
+            rating: feedbackRatingInput ? Number(feedbackRatingInput.value) : null,
+            comment: feedbackCommentInput ? feedbackCommentInput.value.trim() : ''
+          })
+
+          feedbackForm.reset()
+          if (feedbackPanel) {
+            showStatus('Feedback submitted. Thank you!', 'success')
+            setTimeout(() => {
+              if (feedbackPanel) feedbackPanel.style.display = 'none'
+            }, 1500)
+          }
+        } catch (err) {
+          console.error(err)
+          showStatus(err.message || 'Failed to submit feedback.', 'error')
+        }
+      })
+    }
+
   // Map click behaviour 
   map.on('click', (e) => {
     // Barrier mode takes priority
     if (reportingMode) {
-      const marker = L.marker(e.latlng).addTo(barrierLayer)
-      marker.bindPopup('Barrier reported').openPopup()
-
-      barriers.push({
-        lat: e.latlng.lat,
-        lng: e.latlng.lng,
-        time: Date.now(),
-        description: ''
-      })
-
       reportingMode = false
       clearStatus()
-      console.log('Barriers:', barriers)
+      openBarrierModal(e.latlng)
       return
     }
 

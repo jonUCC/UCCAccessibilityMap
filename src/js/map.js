@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return
   }
 
-  const GH_API_KEY = '8703b873-e008-40e2-91b6-16231da438f2'
+  //const GH_API_KEY = '8703b873-e008-40e2-91b6-16231da438f2'
 
   // Init map
   const UCC_CENTER = [51.893, -8.492]
@@ -63,6 +63,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const routeAccessibilityEl = document.getElementById('routeAccessibility')
   const routeWarningsEl = document.getElementById('routeWarnings')
 
+  // Routing mode state
+  let routeMode = 'map' // 'map' | 'building'
+
+  // Building index: code -> { code, name, latlng, layer }
+  const buildingsByCode = new Map()
+
+  // Building mode UI
+  const buildingModeControls = document.getElementById('buildingModeControls')
+  const startBuildingSelect = document.getElementById('startBuilding')
+  const endBuildingSelect = document.getElementById('endBuilding')
+  const swapBuildingsBtn = document.getElementById('swapBuildings')
+
   // Icons 
   const startIcon = L.divIcon({
     className: 'start-marker',
@@ -100,6 +112,46 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!statusEl) return
     statusEl.textContent = ''
     statusEl.className = 'status-message'
+  }
+
+  function haversineMeters(a, b) {
+    const toRad = (deg) => (deg * Math.PI) / 180
+    const R = 6371000
+    const lat1 = toRad(a[1]), lat2 = toRad(b[1])
+    const dLat = toRad(b[1] - a[1])
+    const dLng = toRad(b[0] - a[0])
+    const x = Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x))
+  }
+
+  function worstSlopeSegment(routeCoords, maxSlopeDetails) {
+    if (!Array.isArray(maxSlopeDetails)) return null
+    let worst = { slope: 0, meters: 0 }
+    for (const [from, to, slope] of maxSlopeDetails) {
+      let meters = 0
+      for (let i = from; i < to && i + 1 < routeCoords.length; i++) {
+        meters += haversineMeters(routeCoords[i], routeCoords[i + 1])
+      }
+      const absSlope = Math.abs(slope)
+      if (absSlope > worst.slope) worst = { slope: absSlope, meters }
+    }
+    return worst
+  }
+
+  function applyLevelAndColor(scoring) {
+    if (!scoring) return scoring
+    if (scoring.score >= 80) {
+      scoring.level = 'high'
+      scoring.color = '#4caf50'
+    } else if (scoring.score >= 50) {
+      scoring.level = 'medium'
+      scoring.color = '#ff9800'
+    } else {
+      scoring.level = 'low'
+      scoring.color = '#f44336'
+    }
+    return scoring
   }
 
   function showRouteInfo(distance, duration, scoring) {
@@ -175,6 +227,91 @@ document.addEventListener('DOMContentLoaded', () => {
     if (routeBtn) routeBtn.disabled = !(startPoint && endPoint)
   }
 
+  function populateBuildingSelects() {
+        if (!startBuildingSelect || !endBuildingSelect) return
+
+        const items = Array.from(buildingsByCode.values())
+          .filter(b => b.code)
+          .sort((a, b) => (a.name || a.code).localeCompare(b.name || b.code))
+
+        const optionsHtml = ['<option value="">Select…</option>']
+          .concat(items.map(b => `<option value="${String(b.code)}">${b.code} – ${b.name || 'Building'}</option>`))
+          .join('')
+
+        startBuildingSelect.innerHTML = optionsHtml
+        endBuildingSelect.innerHTML = optionsHtml
+      }
+
+      function setPointFromBuilding(which, code) {
+        const b = buildingsByCode.get(code)
+        if (!b) return
+
+        if (which === 'start') {
+          startPoint = b.latlng
+          if (startMarker) map.removeLayer(startMarker)
+          startMarker = L.marker(b.latlng, { icon: startIcon }).addTo(map).bindPopup(`Start: ${b.code}`)
+        } else {
+          endPoint = b.latlng
+          if (endMarker) map.removeLayer(endMarker)
+          endMarker = L.marker(b.latlng, { icon: endIcon }).addTo(map).bindPopup(`End: ${b.code}`)
+        }
+      }
+
+      function updateBuildingModeFromUI() {
+        if (!startBuildingSelect || !endBuildingSelect) return
+
+        const startCode = startBuildingSelect.value
+        const endCode = endBuildingSelect.value
+
+        // Clear route when changing endpoints
+        if (routeLayer) map.removeLayer(routeLayer)
+        routeLayer = null
+        hideRouteInfo()
+
+        // Reset points
+        startPoint = null
+        endPoint = null
+        if (startMarker) map.removeLayer(startMarker)
+        if (endMarker) map.removeLayer(endMarker)
+        startMarker = null
+        endMarker = null
+
+        if (startCode) setPointFromBuilding('start', startCode)
+        if (endCode) setPointFromBuilding('end', endCode)
+
+        // If both selected, zoom to them
+        if (startPoint && endPoint) {
+          const bounds = L.latLngBounds([startPoint, endPoint])
+          map.fitBounds(bounds, { padding: [50, 50] })
+        }
+
+        updateUI()
+        clearStatus()
+      }
+
+      function setRoutingMode(nextMode) {
+        routeMode = nextMode
+
+        if (buildingModeControls) {
+          buildingModeControls.style.display = routeMode === 'building' ? 'block' : 'none'
+        }
+
+        // Clear existing route when switching modes (prevents confusion)
+        if (routeLayer) map.removeLayer(routeLayer)
+        routeLayer = null
+        hideRouteInfo()
+
+        // Clear markers/points so the new mode is “fresh”
+        startPoint = null
+        endPoint = null
+        if (startMarker) map.removeLayer(startMarker)
+        if (endMarker) map.removeLayer(endMarker)
+        startMarker = null
+        endMarker = null
+
+        updateUI()
+      }
+
   // Show known hazards on map
   function displayHazardsOnMap() {
     hazardMarkersLayer.clearLayers()
@@ -223,7 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   displayHazardsOnMap()
-
   // Optional: load buildings overlay
   async function loadBuildings() {
     try {
@@ -239,26 +375,61 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         onEachFeature: (feature, layer) => {
           const p = feature.properties || {}
+          // Index buildings for "Buildings" routing mode
+          const code = p.building_code || p.name
+          if (code) {
+            const center = layer.getBounds().getCenter() // simple + effective
+            buildingsByCode.set(String(code), {
+              code: String(code),
+              name: p.name || p['name:en'] || p.alt_name || String(code),
+              latlng: center,
+              layer
+            })
+          }
 
-          const floorsHtml = (p.floors || [])
-            .map(
-              (img, i) =>
-                `<div>
-                  <strong>Floor ${i + 1}</strong><br/>
-                  <img src="${img}" style="width:200px; margin-top:4px;" />
-                </div>`
+          const floors = Array.isArray(p.floors) ? p.floors : []
+          const hasFloors = floors.length > 0
+
+          // Create a token so the new tab can read floor data from localStorage
+          const token = `${(p.id || p.name || 'building').toString().replace(/\s+/g, '-')}-${Date.now()}`
+
+          // Save data for the new tab
+          if (hasFloors) {
+            localStorage.setItem(
+              `ucc_floorplans_${token}`,
+              JSON.stringify({
+                name: p.name || 'Building',
+                floors
+              })
             )
-            .join('<hr/>')
+          }
+
+          const floorsHtml = hasFloors
+            ? `<button class="btn-secondary" type="button"
+                  onclick="window.open('/floorplans.html?token=${encodeURIComponent(token)}','_blank','noopener')">
+                  Open floor plan in new tab
+               </button>`
+            : ''
 
           const popupHtml = `
             <h3>${p.name || 'Building'}</h3>
-            ${p.opening_hours ? `<p><strong>Opening hours:</strong><br/>${p.opening_hours}</p>` : ''}
+
+            ${p.opening_hours
+              ? `<p><strong>Opening hours:</strong><br/>${p.opening_hours}</p>`
+              : ''}
+
+            ${p.wheelchair
+              ? `<p><strong>Wheelchair Accessibility:</strong><br/>${p.wheelchair}</p>`
+              : ''}
+
             ${floorsHtml}
           `
 
           layer.bindPopup(popupHtml)
         }
       }).addTo(map)
+      // ✅ now that buildingsByCode is filled, update dropdowns
+            populateBuildingSelects()
     } catch (e) {
       // ignore if missing or invalid
     }
@@ -270,6 +441,32 @@ document.addEventListener('DOMContentLoaded', () => {
   if (profileSelect) {
     profileSelect.addEventListener('change', () => {
       activeProfile = profileSelect.value
+    })
+  }
+
+  // Routing mode toggle
+  document.querySelectorAll('input[name="routeMode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      setRoutingMode(e.target.value)
+      if (routeMode === 'building') {
+        showStatus('Select start/end buildings from the dropdowns', 'loading')
+      } else {
+        clearStatus()
+      }
+    })
+  })
+
+  // Building dropdown change handlers
+  if (startBuildingSelect) startBuildingSelect.addEventListener('change', updateBuildingModeFromUI)
+  if (endBuildingSelect) endBuildingSelect.addEventListener('change', updateBuildingModeFromUI)
+
+  if (swapBuildingsBtn) {
+    swapBuildingsBtn.addEventListener('click', () => {
+      if (!startBuildingSelect || !endBuildingSelect) return
+      const a = startBuildingSelect.value
+      startBuildingSelect.value = endBuildingSelect.value
+      endBuildingSelect.value = a
+      updateBuildingModeFromUI()
     })
   }
 
@@ -304,6 +501,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return
     }
 
+     // If in building mode, don't set points by clicking
+      if (routeMode === 'building') {
+        showStatus('Building mode: choose start/end from the dropdowns', 'loading')
+        return
+      }
+
     // Normal routing points selection
     const latlng = e.latlng
 
@@ -335,21 +538,61 @@ document.addEventListener('DOMContentLoaded', () => {
     clearStatus()
   })
 
-  // Routing (GraphHopper foot)
-  async function getRoute(start, end) {
-    const url = `https://graphhopper.com/api/1/route`
-      + `?point=${start.lat},${start.lng}`
-      + `&point=${end.lat},${end.lng}`
-      + `&profile=foot`
-      + `&points_encoded=false`
-      + `&locale=en`
-      + `&key=${GH_API_KEY}`
+  // Routing (LOCAL GraphHopper via Node proxy)
+  const CUSTOM_MODELS = {
+    'step-free': {
+      distance_influence: 80,
+      priority: [
+        { if: 'road_class == STEPS', multiply_by: '0.05' },
+        { if: 'max_slope > 6', multiply_by: '0.5' },
+        { if: 'max_slope > 10', multiply_by: '0.2' }
+      ]
+    },
+    'gentle-gradient': {
+      distance_influence: 40,
+      priority: [
+        { if: 'road_class == STEPS', multiply_by: '0' },
+        { if: 'max_slope > 8', multiply_by: '0.5' },
+        { if: 'max_slope > 12', multiply_by: '0.2' }
+      ]
+    },
+    'low-energy': {
+      distance_influence: 10,
+      priority: [
+        { if: 'road_class == STEPS', multiply_by: '0' },
+        { if: 'max_slope > 10', multiply_by: '0.4' }
+      ]
+    }
+  }
 
-    const response = await fetch(url)
+  async function getRoute(start, end) {
+    const body = {
+      profile: 'foot',
+      // GraphHopper expects [lon, lat]
+      points: [
+        [start.lng, start.lat],
+        [end.lng, end.lat]
+      ],
+      points_encoded: false,
+      locale: 'en',
+      instructions: true,
+
+      // This is how we "get slope back" in the response
+      details: ['max_slope', 'average_slope'],
+
+      // Use the active profile’s routing preferences
+      custom_model: CUSTOM_MODELS[activeProfile] || CUSTOM_MODELS['step-free']
+    }
+
+    const response = await fetch('/api/route', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
 
     if (!response.ok) {
-      const errData = await response.json().catch(() => ({}))
-      throw new Error(errData.message || `Routing failed: ${response.status}`)
+      const errText = await response.text().catch(() => '')
+      throw new Error(errText || `Routing failed: ${response.status}`)
     }
 
     const data = await response.json()
@@ -363,10 +606,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return {
       geometry: {
         type: 'LineString',
-        coordinates: path.points.coordinates
+        coordinates: path.points.coordinates // stays [lng,lat] which matches your scorer
       },
       distance: path.distance,
-      duration: path.time / 1000  // GH returns ms → seconds
+      duration: path.time / 1000, // ms -> seconds
+      details: path.details || {}, // slope details live here
+      ascend: path.ascend,
+      descend: path.descend
     }
   }
 
@@ -391,6 +637,40 @@ document.addEventListener('DOMContentLoaded', () => {
           window.ACCESSIBILITY_PROFILES
         )
       }
+
+      // Add slope-based warning if available
+      if (scoring && route.details && route.details.max_slope) {
+        const worst = worstSlopeSegment(route.geometry.coordinates, route.details.max_slope)
+        if (worst) {
+          const limits = activeProfile === 'step-free'
+            ? { warn: 5, bad: 8 }
+            : activeProfile === 'gentle-gradient'
+              ? { warn: 7, bad: 11 }
+              : { warn: 8, bad: 12 }
+
+          if (worst.slope >= limits.bad) {
+            scoring.score = Math.max(0, scoring.score - 20)
+            scoring.warnings.unshift({
+              id: 'slope-bad',
+              text: `Very steep section (~${Math.round(worst.slope)}% for ${Math.round(worst.meters)}m)`,
+              note: 'Route contains a steep gradient that may be difficult/unsafe for some mobility needs.',
+              type: 'slope',
+              severity: 'high'
+            })
+          } else if (worst.slope >= limits.warn) {
+            scoring.score = Math.max(0, scoring.score - 8)
+            scoring.warnings.unshift({
+              id: 'slope-warn',
+              text: `Steep section (~${Math.round(worst.slope)}% for ${Math.round(worst.meters)}m)`,
+              note: 'Consider an alternative route if you need gentler slopes.',
+              type: 'slope',
+              severity: 'medium'
+            })
+          }
+        }
+      }
+
+      scoring = applyLevelAndColor(scoring)
 
       // Color the route based on score
       const routeColor = scoring ? scoring.color : '#2196F3'

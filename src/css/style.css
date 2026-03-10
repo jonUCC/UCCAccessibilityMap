@@ -13,6 +13,13 @@ body {
 
 /* ---- Control panel ---- */
 .control-panel {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+/* Main floating control panel */
+#mainControlPanel {
   position: absolute;
   top: 10px;
   left: 10px;
@@ -21,7 +28,7 @@ body {
   padding: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  max-width: 320px;
+  width: 320px;
   max-height: calc(100vh - 40px);
   overflow-y: auto;
 }
@@ -289,4 +296,45 @@ button {
 .mark-fixed-btn {
   width: 100%;
   margin-top: 6px;
+}
+/* Sidebar stack for route info, directions, feedback */
+#sidebarPanels {
+  position: absolute;
+  top: 360px; /* push below main panel */
+  left: 10px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+}
+
+/* Panels inside sidebar stack normally */
+#sidebarPanels .control-panel {
+  position: static;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  background: white;
+  padding: 12px 14px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  overflow-y: visible;
+}
+
+#routeDirections {
+  max-height: 250px;
+  overflow-y: auto;
+}
+#feedbackPanel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  left: auto;
+
+  width: 280px;
+  max-width: 280px;
+
+  z-index: 1000;
 }

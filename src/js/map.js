@@ -56,6 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const routeBtn = document.getElementById('routeBtn')
   const clearBtn = document.getElementById('clearBtn')
   const profileSelect = document.getElementById('profileSelect')
+  const routeDirectionsEl = document.getElementById('routeDirections')
+  const directionsListEl = document.getElementById('directionsList')
 
   const statusEl = document.getElementById('statusMessage')
   const routeInfoEl = document.getElementById('routeInfo')
@@ -126,6 +128,36 @@ document.addEventListener('DOMContentLoaded', () => {
     statusEl.className = `status-message ${type}`
   }
 
+  function showDirections(instructions) {
+    if (!routeDirectionsEl || !directionsListEl) return
+
+    if (!Array.isArray(instructions) || instructions.length === 0) {
+      directionsListEl.innerHTML = '<p>No directions available.</p>'
+      routeDirectionsEl.style.display = 'block'
+      return
+    }
+
+    const html = instructions.map((step, index) => {
+      const text = step.text || 'Continue'
+      const distance = typeof step.distance === 'number'
+        ? formatDistance(step.distance)
+        : ''
+      const time = typeof step.time === 'number'
+        ? formatDuration(step.time / 1000)
+        : ''
+
+      return `
+        <div class="direction-step" style="margin-bottom:10px;">
+          <strong>${index + 1}. ${text}</strong><br/>
+          <small>${distance}${distance && time ? ' • ' : ''}${time}</small>
+        </div>
+      `
+    }).join('')
+
+    directionsListEl.innerHTML = html
+    routeDirectionsEl.style.display = 'block'
+  }
+
   function clearStatus() {
     if (!statusEl) return
     statusEl.textContent = ''
@@ -156,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const rows = await res.json()
 
-      barriers = rows.filter((b) => b.status !== 'resolved')
+      barriers = rows.filter((b) => String(b.status || '').toLowerCase() !== 'resolved')
 
       barrierLayer.clearLayers()
 
@@ -285,17 +317,59 @@ document.addEventListener('DOMContentLoaded', () => {
     return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x))
   }
 
-  function worstSlopeSegment(routeCoords, maxSlopeDetails) {
-    if (!Array.isArray(maxSlopeDetails)) return null
-    let worst = { slope: 0, meters: 0 }
+  function estimateTotalUphill(routeCoords, maxSlopeDetails) {
+    if (!Array.isArray(maxSlopeDetails)) return 0
+
+    let totalClimb = 0
+
     for (const [from, to, slope] of maxSlopeDetails) {
+      if (slope <= 0) continue // ignore downhill
+
       let meters = 0
       for (let i = from; i < to && i + 1 < routeCoords.length; i++) {
         meters += haversineMeters(routeCoords[i], routeCoords[i + 1])
       }
-      const absSlope = Math.abs(slope)
-      if (absSlope > worst.slope) worst = { slope: absSlope, meters }
+
+      if (meters < 1) continue
+
+      const climb = (slope / 100) * meters
+      totalClimb += climb
     }
+
+    return totalClimb
+  }
+
+  function worstSlopeSegment(routeCoords, maxSlopeDetails) {
+    if (!Array.isArray(maxSlopeDetails)) return null
+
+    const MIN_SEGMENT_METERS = 1
+    const MAX_REASONABLE_SLOPE = 40
+
+    let worst = null
+    let worstScore = -Infinity
+
+    for (const [from, to, slope] of maxSlopeDetails) {
+      let meters = 0
+
+      for (let i = from; i < to && i + 1 < routeCoords.length; i++) {
+        meters += haversineMeters(routeCoords[i], routeCoords[i + 1])
+      }
+
+      const absSlope = Math.abs(Number(slope))
+
+      if (!Number.isFinite(absSlope)) continue
+      if (meters < MIN_SEGMENT_METERS) continue
+      if (absSlope > MAX_REASONABLE_SLOPE) continue
+
+      // Weight longer steep segments more than tiny spikes
+      const score = absSlope * Math.min(meters, 10)
+
+      if (score > worstScore) {
+        worstScore = score
+        worst = { slope: absSlope, meters }
+      }
+    }
+
     return worst
   }
 
@@ -355,6 +429,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (routeWarningsEl) {
       routeWarningsEl.innerHTML = ''
       routeWarningsEl.style.display = 'none'
+    }
+    if (feedbackPanel) {
+      feedbackPanel.style.display = 'none'
+    }
+    if (routeDirectionsEl) {
+      routeDirectionsEl.style.display = 'none'
+    }
+    if (directionsListEl) {
+      directionsListEl.innerHTML = ''
     }
   }
 
@@ -451,6 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       function setRoutingMode(nextMode) {
         routeMode = nextMode
+        reportingMode = false
 
         if (buildingModeControls) {
           buildingModeControls.style.display = routeMode === 'building' ? 'block' : 'none'
@@ -817,7 +901,8 @@ document.addEventListener('DOMContentLoaded', () => {
       duration: path.time / 1000, // ms -> seconds
       details: path.details || {}, // slope details live here
       ascend: path.ascend,
-      descend: path.descend
+      descend: path.descend,
+      instructions: path.instructions || []
     }
   }
 
@@ -847,31 +932,77 @@ document.addEventListener('DOMContentLoaded', () => {
       if (scoring && route.details && route.details.max_slope) {
         const worst = worstSlopeSegment(route.geometry.coordinates, route.details.max_slope)
         if (worst) {
+          const roundedMeters = Math.round(worst.meters)
+
           const limits = activeProfile === 'step-free'
             ? { warn: 5, bad: 8 }
             : activeProfile === 'gentle-gradient'
               ? { warn: 7, bad: 11 }
               : { warn: 8, bad: 12 }
 
-          if (worst.slope >= limits.bad) {
-            scoring.score = Math.max(0, scoring.score - 20)
+          if (roundedMeters >= 3 && worst.slope >= limits.bad) {
+            let penalty = 10
+
+            if (roundedMeters >= 5) penalty = 12
+            if (roundedMeters >= 10) penalty = 14
+            if (roundedMeters >= 20) penalty = 16
+
+            if (activeProfile === 'step-free') {
+              penalty += 2
+            }
+
+            scoring.score = Math.max(0, scoring.score - penalty)
             scoring.warnings.unshift({
               id: 'slope-bad',
-              text: `Very steep section (~${Math.round(worst.slope)}% for ${Math.round(worst.meters)}m)`,
-              note: 'Route contains a steep gradient that may be difficult/unsafe for some mobility needs.',
+              text: `Very steep section (~${Math.round(worst.slope)}% for ${roundedMeters}m)`,
+              note: 'Route contains a steep gradient that may be difficult or unsafe for some mobility needs.',
               type: 'slope',
               severity: 'high'
             })
-          } else if (worst.slope >= limits.warn) {
-            scoring.score = Math.max(0, scoring.score - 8)
+          } else if (roundedMeters >= 3 && worst.slope >= limits.warn) {
+            let penalty = 4
+
+            if (roundedMeters >= 5) penalty = 5
+            if (roundedMeters >= 10) penalty = 6
+            if (roundedMeters >= 20) penalty = 8
+
+            scoring.score = Math.max(0, scoring.score - penalty)
             scoring.warnings.unshift({
               id: 'slope-warn',
-              text: `Steep section (~${Math.round(worst.slope)}% for ${Math.round(worst.meters)}m)`,
+              text: `Steep section (~${Math.round(worst.slope)}% for ${roundedMeters}m)`,
               note: 'Consider an alternative route if you need gentler slopes.',
               type: 'slope',
               severity: 'medium'
             })
           }
+        }
+      }
+
+      // Add uphill climb penalty
+      if (scoring && route.details && route.details.max_slope) {
+        const climb = estimateTotalUphill(route.geometry.coordinates, route.details.max_slope)
+
+        const roundedClimb = Math.round(climb)
+
+        if (roundedClimb >= 5) {
+          let penalty = 0
+
+          if (roundedClimb >= 20) penalty = 12
+          else if (roundedClimb >= 15) penalty = 10
+          else if (roundedClimb >= 10) penalty = 8
+          else if (roundedClimb >= 5) penalty = 4
+
+          if (activeProfile === 'step-free') penalty = Math.round(penalty * 1.5)
+
+          scoring.score = Math.max(0, scoring.score - penalty)
+
+          scoring.warnings.unshift({
+            id: 'uphill-total',
+            text: `Significant uphill climb (~${roundedClimb}m total ascent)`,
+            note: 'Route contains sustained uphill sections that may require additional effort.',
+            type: 'slope',
+            severity: roundedClimb >= 15 ? 'high' : 'medium'
+          })
         }
       }
 
@@ -891,6 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
       map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] })
 
       showRouteInfo(route.distance, route.duration, scoring)
+      showDirections(route.instructions)
       clearStatus()
     } catch (error) {
       console.error('Routing error:', error)
@@ -918,14 +1050,13 @@ document.addEventListener('DOMContentLoaded', () => {
       endMarker = null
       routeLayer = null
 
-      // Clear barriers too
-      barrierLayer.clearLayers()
-      barriers.length = 0
 
       reportingMode = false
       hideRouteInfo()
       clearStatus()
       updateUI()
+      // Keep persisted barriers; just clear route selection state
+      loadReportedBarriers()
 
       map.setView(UCC_CENTER, 17)
     })

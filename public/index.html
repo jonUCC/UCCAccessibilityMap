@@ -15,7 +15,7 @@
   </head>
 
   <body>
-    <div class="control-panel">
+    <div id="mainControlPanel" class="control-panel">
       <h3>♿ Accessibility Router</h3>
 
       <div class="instructions">
@@ -97,7 +97,12 @@
 
       <div id="statusMessage" class="status-message"></div>
 
-      <div id="routeInfo" class="route-info">
+      <div id="routeDirections" class="control-panel" style="display:none;">
+          <h4>Directions</h4>
+          <div id="directionsList"></div>
+      </div>
+
+      <div id="routeInfo" class="control-panel">
         <div class="route-stat">
           <span class="route-stat-label">Distance:</span>
           <span class="route-stat-value" id="routeDistance">-</span>

@@ -94,22 +94,57 @@ const AccessibilityScorer = (() => {
     }
 
     // --- Check user-reported barriers ---
-    // Barriers within 20m of route get a flat penalty
-    const BARRIER_RADIUS = 20
-    const BARRIER_PENALTY = 15
+    // Only unresolved barriers should affect scoring.
+    // Severity changes both radius and penalty.
+    // Pending barriers count, but are discounted slightly because they are unverified.
+
+    const BARRIER_RULES = {
+      high:   { radius: 24, penalty: 40, warningSeverity: 'high' },
+      medium: { radius: 20, penalty: 25, warningSeverity: 'medium' },
+      low:    { radius: 14, penalty: 6,  warningSeverity: 'low' }
+    }
+
+    const seenBarrierZones = new Set()
 
     for (const barrier of barriers) {
-      const barrierAsHazard = { lat: barrier.lat, lng: barrier.lng, radius: BARRIER_RADIUS }
+      const status = String(barrier.status || 'pending').toLowerCase()
+      if (status === 'resolved') continue
+
+      const severity = String(barrier.severity || 'medium').toLowerCase()
+      const rule = BARRIER_RULES[severity] || BARRIER_RULES.medium
+
+      const verificationMultiplier =
+        status === 'in_review' ? 1 :
+        status === 'pending' ? 0.75 :
+        1
+
+      const barrierAsHazard = {
+        lat: Number(barrier.lat),
+        lng: Number(barrier.lng),
+        radius: rule.radius
+      }
+
       const result = routePassesNear(routeCoords, barrierAsHazard)
 
       if (result.hit) {
-        score -= BARRIER_PENALTY
+        const zoneKey = `${Math.round(Number(barrier.lat) * 1000)}:${Math.round(Number(barrier.lng) * 1000)}:${severity}`
+
+        if (seenBarrierZones.has(zoneKey)) {
+          continue
+        }
+        seenBarrierZones.add(zoneKey)
+
+        const appliedPenalty = Math.round(rule.penalty * verificationMultiplier)
+        score -= appliedPenalty
+
         warnings.push({
-          id: `barrier-${barrier.time}`,
-          text: 'User-reported barrier nearby',
+          id: `barrier-${barrier.id ?? `${barrier.lat}-${barrier.lng}`}`,
+          text: barrier.barrier_type
+            ? `${barrier.barrier_type} reported nearby`
+            : 'User-reported barrier nearby',
           note: barrier.description || 'No details provided',
           type: 'barrier',
-          severity: 'medium',
+          severity: rule.warningSeverity,
           distance: Math.round(result.distance)
         })
       }

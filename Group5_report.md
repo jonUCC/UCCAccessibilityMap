@@ -4,7 +4,7 @@ Authors: Conor Power, Gavin O'Keeffe, Jack O'Neil, James Coakley
 
 ## Introduction
 
-This project was undertaken as a group to strive for better accessibility options for students with disabilities. 
+This project was undertaken as a group to strive for better accessibility options for students with disabilities.
 
 ## Tasks & Attributions
 
@@ -46,6 +46,7 @@ This project was undertaken as a group to strive for better accessibility option
 | Barrier report data schema design | James |
 | Barrier data freshness and expiry model design | James |
 | User feedback and crowd validation concept design | James |
+| Admin barrier review workflow design | James |
 
 ### Development
 
@@ -83,6 +84,8 @@ This project was undertaken as a group to strive for better accessibility option
 | Implemented barrier reporting UI controls | James |
 | Implemented barrier report data structure (temporary storage) | James |
 | Separated routing interaction from reporting interaction | James |
+| Implemented barrier status management and admin review endpoints | James |
+| Implemented SQLite storage and API support for user feedback | James |
 
 ### Testing
 

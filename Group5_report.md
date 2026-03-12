@@ -3,6 +3,8 @@
 Authors: Conor Power, Gavin O'Keeffe, Jack O'Neil, James Coakley
 GitHub repo: [UCC Accessibility Map Repository](https://github.com/GavUCC/UCCAccessibilityMap)
 
+Academic Integrity Disclaimer: For many parts of the codebase of this project, GenAI tools were used to generate code, for debugging help, and some ideas for functionality. This generated code was vetted and edited by the authors until usable and readable. The report is our own work and was created in its entirety by the authors listed.
+
 ## 1. Introduction
 
 Currently, most online maps available to the public, simply provide them with the shortest route from A to B This project was undertaken as a group to strive for better accessibility options for students with disabilities.
@@ -105,6 +107,10 @@ After a route is generated, the control panel shows the distance, estimated walk
 
 The "Clear" button resets all state: markers, route, directions, score and the map returns to its default view centred on UCC.
 
+#### 4.1.6 **Floor Plan Pop-ups**
+
+Clicking on one of the buildings in UCC will pull up the floor plans of that building in a new tab for readability.
+
 ### 4.2 User Interface Design Choices
 
 The interface was deliberately kept simple. The map takes up the full viewport with a floating control panel positioned in the top left corner. This layout ensures that the map (the most important element) is always visible and the controls do not obscure the route.
@@ -130,6 +136,8 @@ The route feedback form only appears after a route has been generated, positione
 ## 5.1 Routing Validation
 
 Routing was validated through a combination of manual testing and visual inspection rather than automated unit tests, which was appropriate given the project's scope and timeline.
+Test routes were generated and then travelled by a member of the team to verify that the given route would be usable for a person of the specified disability.
+Floor plans were also ensured to be up to date by a walk through of the buildings we were able to get floor plans to.
 
 **Route generation**
 We tested that routes could be successfully generated between a range of point pairs across campus, including pairs that were close together, far apart, on opposite sides of steep sections, and between buildings with known accessibility barriers. Each request was checked to confirm that a valid GeoJSON LineString was returned and that the route rendered correctly on the map.
@@ -166,6 +174,9 @@ My biggest lesson throughout the development of this application was to **expect
 
 #### 6.2.1 Routing Engine Challenges
 
+### 6.3 Personal Reflection (Jack)
+My biggest lesson from this was being willing to step up to a given task and volunteering myself for it. Working in a group of people who were more than willing to step up and do their own work, I had to make myself known for the tasks I wanted to tackle and work I wanted to get done and implemented. I also learned to be willing to give up on systems that don't work and settle for an easier implementation. The popup for building floor plans being on the same page was a good idea but needing to have all floors up made it untenable and the new window popup was a better idea. Ended up being unable to get floor plans to all buildings, some are more strict with them than others and make them harder to find on the UCC website, could do a better job at trying more avenues to find difficult information like this going forward.
+
 **OSRM limitations**
 As described in Section 6.1, the initial OSRM integration produced working routes but lacked any mechanism for penalising accessibility barriers. Identifying this early saved time, but it did mean the routing layer had to be rebuilt around a different engine.
 
@@ -184,13 +195,15 @@ During integration, there were intermittent errors where the frontend would fail
 
 ## 7. Conclusion
 
+Our disability focused mapping webapp largely met the expectations we had set for it from the outset. It has a clear flow for the user to interact with before, during, and after their journey. It continuously improves via the confidence score metric, provides good routes to users based on a listed disability, and gives a place for a user to report an unexpected barrier or blockage. Some improvements still could be made, for example the support for hard of sight users is currently a bit poor, with a lack of alt text for web readers to interact with the page making it so a blind user gets no benefit from our site even if they navigated to it.
+
 ## 8. Tasks & Attributions
 
 ### Pre-Development
 
 | Task                                           | Completed by      |
 |------------------------------------------------|-------------------|
-| Project suggestions & Voting                   | Team |
+| Project suggestions & Voting                   | Team              |
 | Reconnaissance (walking campus routes)         | Jack              |
 | Guided Recon                                   | James             |
 | Similar Project Research                       | James             |
